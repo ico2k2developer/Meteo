@@ -15,7 +15,6 @@ void setup()
     Serial.begin(115200);
     Wire.begin(0,2);
     rtc.refresh();
-    WiFi.mode(WIFI_STA);
     client.setFingerprint(AIO_FINGERPRINT);
     ledBuiltinSetup();
     ArduinoOTA.onStart([]()
@@ -72,14 +71,32 @@ void setup()
     });
     ArduinoOTA.begin();
 
+    if(bme.begin())
+        Serial.println("BME280 sensor correctly configured");
+    else
+    {
+        Serial.println("BME280 not found, restarting...");
+        EspClass::restart();
+    }
+
+    WiFi.mode(WIFI_STA);
+
     Serial.println("Setup completed");
     delay(1000);
 }
 
 void loop()
 {
+    rtc.refresh();
     if(WiFi.isConnected())
     {
+        if(rtc.hour() == 0)
+        {
 
+        }
+    }
+    else
+    {
+        WiFi.begin(WIFI_SSID,WIFI_PASSWORD);
     }
 }
