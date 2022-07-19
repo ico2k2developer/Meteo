@@ -13,6 +13,7 @@
 #include <Adafruit_MQTT.h>
 #include <Adafruit_MQTT_Client.h>
 #include <uRTCLib.h>
+#include <ESPNtpClient.h>
 
 #include <version.h>
 #include <passwords.h>
