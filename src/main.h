@@ -6,7 +6,6 @@
 #define METEO_MAIN_H
 
 #include <Arduino.h>
-#include <ArduinoOTA.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <Adafruit_BME280.h>
@@ -19,6 +18,7 @@
 #include <passwords.h>
 #include <adafruit.h>
 #include <types.h>
+#include <config.h>
 
 #define LED_ON              LOW
 #define LED_OFF             HIGH
