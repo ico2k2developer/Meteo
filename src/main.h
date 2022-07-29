@@ -5,6 +5,8 @@
 #ifndef METEO_MAIN_H
 #define METEO_MAIN_H
 
+#define PROJECT         "Meteo"
+
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -14,6 +16,7 @@
 #include <uRTCLib.h>
 #include <ESPNtpClient.h>
 
+#include <boolean.h>
 #include <version.h>
 #include <passwords.h>
 #include <adafruit.h>

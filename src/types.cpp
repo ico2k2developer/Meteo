@@ -44,14 +44,14 @@ date_p date_set_date(date_p date,uint8_t day,uint8_t month,uint16_t year)
     return date;
 }
 
-uint8_t sample_get_hour(sample_p sample)
+uint8_t sample_get_hour(sample_t sample)
 {
-    return sample->time / 60;
+    return sample.time / 60;
 }
 
-uint8_t sample_get_min(sample_p sample)
+uint8_t sample_get_min(sample_t sample)
 {
-    return sample->time - sample_get_hour(sample) * 60;
+    return sample.time - sample_get_hour(sample) * 60;
 }
 
 sample_p sample_set_time(sample_p sample,uint8_t hour,uint8_t min)
@@ -60,35 +60,20 @@ sample_p sample_set_time(sample_p sample,uint8_t hour,uint8_t min)
     return sample;
 }
 
-float temp_get_value(temp_p temp)
+float sample_get_value(sample_t sample)
 {
-    return ((float)(temp->value)) / ((float)DIV_TEMP);
+    return sample.value;
 }
 
-float press_get_value(press_p press)
+sample_p sample_set_value(sample_p sample,float value)
 {
-    return ((float)(press->value)) / ((float)DIV_PRESS);
+    sample->value = value;
+    return sample;
 }
 
-float hum_get_value(hum_p hum)
+sample_p sample_copy(sample_p target,sample_t source)
 {
-    return ((float)(hum->value)) / ((float)DIV_HUM);
-}
-
-temp_p temp_set_value(temp_p temp,float value)
-{
-    temp->value = ((uint16_t)(value * DIV_TEMP));
-    return temp;
-}
-
-press_p press_set_value(press_p press,float value)
-{
-    press->value = ((uint16_t)(value * DIV_PRESS));
-    return press;
-}
-
-hum_p hum_set_value(hum_p hum,float value)
-{
-    hum->value = ((uint16_t)(value * DIV_HUM));
-    return hum;
+    target->time = source.time;
+    target->value = source.value;
+    return target;
 }

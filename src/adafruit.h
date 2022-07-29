@@ -7,7 +7,7 @@
 
 #define AIO_SERVER      "io.adafruit.com"
 #define AIO_PORT        8883
-#define AIO_FINGERPRINT "26 96 1C 2A 51 07 FD 15 80 96 93 AE F7 32 CE B9 0D 01 55 C4"
+#define AIO_FINGERPRINT "59 3C 48 0A B1 8B 39 4E 0D 58 50 47 9A 13 55 60 CC A0 1D AF"
 
 #define REFRESH_FEED        10000
 #define BASE_FEED           AIO_USERNAME "/feeds/meteo."
