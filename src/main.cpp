@@ -2,15 +2,15 @@
 
 Adafruit_BME280 bme;
 uRTCLib rtc;
-WiFiClientSecure client;
+WiFiClient client;
 Adafruit_MQTT_Client mqtt(&client,AIO_SERVER,AIO_PORT,PROJECT,AIO_USERNAME,AIO_KEY);
 Adafruit_MQTT_Publish rssi(&mqtt,FEED_RSSI );
 Adafruit_MQTT_Publish temperature(&mqtt, FEED_TEMPERATURE);
 Adafruit_MQTT_Publish pressure(&mqtt, FEED_PRESSURE);
 Adafruit_MQTT_Publish humidity(&mqtt, FEED_HUMIDITY);
 Adafruit_MQTT_Publish logs(&mqtt, FEED_LOGS);
-
-uint8_t ntpEvent = 0;
+WiFiUDP ntpUDP;
+NTPClient ntp(ntpUDP,NTP_SERVER,NTP_OFFSET,NTP_UPDATE_INTERVAL);
 
 sample_t temp_max,temp_min,press_max,press_min,hum_max,hum_min;
 
@@ -24,9 +24,11 @@ bool_t minMaxUpdates;
 
 void setup()
 {
-    Serial.begin(74880);
-    Serial.println("\nInitiaziling setup");
+    Serial.begin(115200);
+    Serial.println("\n\nSerial port initialized");
     Wire.begin(0,2);
+
+    Serial.println("Initiaziling setup");
     rtc.set_model(URTCLIB_MODEL_DS3231);
     rtc.refresh();
     Serial.printf("Current time is %02i:%02i:%02i %i/%i/%i\n",
@@ -36,18 +38,7 @@ void setup()
                   rtc.day(),
                   rtc.month(),
                   rtc.year());
-    client.setFingerprint(AIO_FINGERPRINT);
-    NTP.setTimeZone(TZ_Etc_UTC);
-    NTP.setInterval(NTP_UPDATE_INTERVAL,NTP_UPDATE_INTERVAL_L);
-    NTP.onNTPSyncEvent([](NTPEvent_t event)
-    {
-        Serial.printf("NTP sync event received: %d\n",event.event);
-        if(event.event == timeSyncd)
-        {
-            ntpEvent = 1;
-        }
-    });
-    NTP.begin(DEFAULT_NTP_SERVER,false);
+    //client.setFingerprint(AIO_FINGERPRINT);
 
     if(bme.begin())
         Serial.println("BME280 sensor correctly configured");
@@ -93,7 +84,7 @@ void loop()
         if(!connected)
         {
             Serial.println("Connected");
-            NTP.getTime();
+            ntp.begin();
             mqttError = mqtt.connect();
             connected = 1;
         }
@@ -169,79 +160,10 @@ void loop()
             }
         }
 
-        if(ntpEvent)
+        if(ntp.update())
         {
-            ntpEvent = 0;
-
-            Serial.println("NTP successful sync");
-            time_t t = NTP.getLastNTPSync();
-            struct tm* time = gmtime(&t);
-            uint8_t dayOfWeek;
-            switch(time->tm_wday)
-            {
-                case 0:
-                {
-                    dayOfWeek = URTCLIB_WEEKDAY_SUNDAY;
-                    break;
-                }
-                case 1:
-                {
-                    dayOfWeek = URTCLIB_WEEKDAY_MONDAY;
-                    break;
-                }
-                case 2:
-                {
-                    dayOfWeek = URTCLIB_WEEKDAY_TUESDAY;
-                    break;
-                }
-                case 3:
-                {
-                    dayOfWeek = URTCLIB_WEEKDAY_WEDNESDAY;
-                    break;
-                }
-                case 4:
-                {
-                    dayOfWeek = URTCLIB_WEEKDAY_THURSDAY;
-                    break;
-                }
-                case 5:
-                {
-                    dayOfWeek = URTCLIB_WEEKDAY_FRIDAY;
-                    break;
-                }
-                case 6:
-                {
-                    dayOfWeek = URTCLIB_WEEKDAY_SATURDAY;
-                    break;
-                }
-                default:
-                {
-                    dayOfWeek = 0;
-                }
-            }
-            rtc.set(
-                    time->tm_sec,
-                    time->tm_min,
-                    time->tm_hour,
-                    dayOfWeek,
-                    time->tm_mday,
-                    time->tm_mon,
-                    time->tm_year - 100);
-            rtc.refresh();
-            {
-                char tmp[100];
-                sprintf(tmp,"RTC synced to UTC time %02hhu:%02hhu:%02hhu %hhu/%hhu/%d (%hhu doW)",
-                        rtc.hour(),
-                        rtc.minute(),
-                        rtc.second(),
-                        rtc.day(),
-                        rtc.month(),
-                        ((uint16_t)rtc.year()) + 2000,
-                        rtc.dayOfWeek());
-                Serial.println(tmp);
-                logs.publish(tmp);
-            }
-
+            Serial.println("NTP update received");
+            syncTime(ntp,rtc);
         }
     }
     else

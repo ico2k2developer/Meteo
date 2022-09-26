@@ -9,12 +9,11 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 #include <ESP8266HTTPClient.h>
 #include <Adafruit_BME280.h>
 #include <Adafruit_MQTT.h>
 #include <Adafruit_MQTT_Client.h>
-#include <uRTCLib.h>
-#include <ESPNtpClient.h>
 
 #include <boolean.h>
 #include <version.h>
@@ -22,6 +21,7 @@
 #include <adafruit.h>
 #include <types.h>
 #include <config.h>
+#include <eeprom.h>
 
 #define LED_ON              LOW
 #define LED_OFF             HIGH
