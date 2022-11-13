@@ -13,6 +13,7 @@ WiFiUDP ntpUDP;
 NTPClient ntp(ntpUDP,NTP_SERVER,NTP_OFFSET,NTP_UPDATE_INTERVAL);
 
 sample_t temp_max,temp_min,press_max,press_min,hum_max,hum_min;
+uint64_t serial;
 
 bool_t minMaxUpdates;
 #define UPDATE_TEMP_MAX     0
@@ -26,6 +27,9 @@ void setup()
 {
     Serial.begin(115200);
     Serial.println("\n\nSerial port initialized");
+
+    if(I2C_ClearBus() != 0)
+        EspClass::restart();
     Wire.begin(0,2);
 
     Serial.println("Initiaziling setup");
@@ -67,6 +71,8 @@ void setup()
 
     WiFi.mode(WIFI_STA);
 
+    serial = millis();
+
     Serial.println("Setup completed");
     delay(1000);
 }
@@ -77,7 +83,6 @@ int8_t mqttError;
 
 void loop()
 {
-    rtc.refresh();
     if(WiFi.isConnected())
     {
         //ArduinoOTA.handle();
@@ -97,31 +102,31 @@ void loop()
                     update = millis();
                     rssi.publish(WiFi.RSSI());
                     temperature.publish(bme.readTemperature());
-                    pressure.publish(bme.readPressure() / 100.0f);
+                    pressure.publish(bme.readPressure() / 100.0f,4);
                     humidity.publish(bme.readHumidity());
 
                     char tmp[100];
                     if(bool_getValue(minMaxUpdates,UPDATE_TEMP_MAX))
                     {
-                        sprintf(tmp,"New highest temperature of the day reached: %.2f°C",sample_get_value(temp_max));
+                        sprintf(tmp,"New highest temperature of the day reached: %.2fC",sample_get_value(temp_max));
                         Serial.println(tmp);
                         logs.publish(tmp);
                     }
                     if(bool_getValue(minMaxUpdates,UPDATE_TEMP_MIN))
                     {
-                        sprintf(tmp,"New lowest temperature of the day reached: %.2f°C",sample_get_value(temp_min));
+                        sprintf(tmp,"New lowest temperature of the day reached: %.2fC",sample_get_value(temp_min));
                         Serial.println(tmp);
                         logs.publish(tmp);
                     }
                     if(bool_getValue(minMaxUpdates,UPDATE_PRESS_MAX))
                     {
-                        sprintf(tmp,"New highest absolute pressure of the day reached: %.2f hPa",sample_get_value(press_max));
+                        sprintf(tmp,"New highest absolute pressure of the day reached: %.2fhPa",sample_get_value(press_max));
                         Serial.println(tmp);
                         logs.publish(tmp);
                     }
                     if(bool_getValue(minMaxUpdates,UPDATE_PRESS_MIN))
                     {
-                        sprintf(tmp,"New lowest absolute pressure of the day reached: %.2f hPa",sample_get_value(press_min));
+                        sprintf(tmp,"New lowest absolute pressure of the day reached: %.2fhPa",sample_get_value(press_min));
                         Serial.println(tmp);
                         logs.publish(tmp);
                     }
@@ -177,31 +182,43 @@ void loop()
     }
 
     float temp = bme.readTemperature();
-    float press = bme.readPressure() / 100.0f;
+    float press = bme.readPressure();
     float hum = bme.readHumidity();
-    rtc.refresh();
+
+    if((millis() - serial) > 500)
+    {
+        Serial.printf("%.2fC, %.2fPa, %.2f%% humidity\n",temp,press,hum);
+        serial = millis();
+    }
+
 
     if(temp > sample_get_value(temp_max))
     {
+        rtc.refresh();
         sample_set_time(&temp_max,rtc.hour(),rtc.minute());
         sample_set_value(&temp_max,temp);
         bool_setValue(&minMaxUpdates,UPDATE_TEMP_MAX,1);
     }
     else if(temp < sample_get_value(temp_min))
     {
+        rtc.refresh();
         sample_set_time(&temp_min,rtc.hour(),rtc.minute());
         sample_set_value(&temp_min,temp);
         bool_setValue(&minMaxUpdates,UPDATE_TEMP_MIN,1);
     }
 
+    press /= 100.0f;
+
     if(press > sample_get_value(press_max))
     {
+        rtc.refresh();
         sample_set_time(&press_max,rtc.hour(),rtc.minute());
         sample_set_value(&press_max,press);
         bool_setValue(&minMaxUpdates,UPDATE_PRESS_MAX,1);
     }
     else if(press < sample_get_value(press_min))
     {
+        rtc.refresh();
         sample_set_time(&press_min,rtc.hour(),rtc.minute());
         sample_set_value(&press_min,press);
         bool_setValue(&minMaxUpdates,UPDATE_PRESS_MIN,1);
@@ -209,12 +226,14 @@ void loop()
 
     if(hum > sample_get_value(hum_max))
     {
+        rtc.refresh();
         sample_set_time(&hum_max,rtc.hour(),rtc.minute());
         sample_set_value(&hum_max,hum);
         bool_setValue(&minMaxUpdates,UPDATE_HUM_MAX,1);
     }
     else if(hum < sample_get_value(hum_min))
     {
+        rtc.refresh();
         sample_set_time(&hum_min,rtc.hour(),rtc.minute());
         sample_set_value(&hum_min,hum);
         bool_setValue(&minMaxUpdates,UPDATE_HUM_MIN,1);

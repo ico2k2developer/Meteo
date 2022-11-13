@@ -6,6 +6,7 @@
 #define METEO_EEPROM_H
 
 #include <cstdint>
+#include <cstdlib>
 #include <Wire.h>
 #include <uRTCLib.h>
 

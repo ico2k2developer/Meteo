@@ -11,7 +11,7 @@
 #define NTP_SERVER              "pool.ntp.org"
 #define NTP_OFFSET              0
 //#define NTP_UPDATE_INTERVAL     (3*60*60000)
-#define NTP_UPDATE_INTERVAL     60000 * 60
+#define NTP_UPDATE_INTERVAL     (60000 * 60)
 #define NTP_TIMEZONE            (+1)
 
 
@@ -73,5 +73,7 @@ const uint16_t DAY0S[]    = {
 #define MQTT_UPDATE_INTERVAL    10000
 
 void syncTime(NTPClient client,uRTCLib rtc);
+
+short I2C_ClearBus();
 
 #endif //METEO_CONFIG_H
