@@ -5,79 +5,7 @@
 #include <wifi.hpp>
 
 uint8_t connected = 0;
-
-uint8_t wifi_check(timer_trigger_t trigger)
-{
-    if(WiFi.isConnected())
-    {
-        if(!connected)
-        {
-            connected = 1;
-            Serial.printf("Connected to %s\n",WiFi.SSID().c_str());
-            configTime(TZ,NTP_SERVER_1,NTP_SERVER_2,NTP_SERVER_3);
-            timer_set_rel(timer_id,1000 * 1000,)
-        }
-        else
-        {
-
-            /*if(millis() - ms > 1000)
-            {
-                time_t data;
-                time(&data);
-                struct tm * info = localtime(&data);
-                char tmp[100];
-                strftime(tmp,100,"%A, %d %B %G, %H:%M:%S\n",info);
-                Serial.print(tmp);
-                ms = millis();
-            }*/
-        }
-    }
-    else
-    {
-        switch(scanner)
-        {
-            case NOT_SCANNING:
-            {
-                WiFi.disconnect(false);
-                WiFi.scanNetworksAsync(&wifiScanResult,true);
-                scanner = SCANNING;
-                wifi_selected = 0;
-                break;
-            }
-            case SCANNING:
-            {
-                break;
-            }
-            case SCAN_ENDED:
-            {
-                /*if(millis() - ms > WL_RETRY_INTERVAL)
-                {
-                    if(wifi_selected < wifi_count)
-                    {
-                        char ssid[WL_SSID_MAX_LENGTH + 1];
-                        char password[WL_PASSWORD_MAX_LENGTH + 1];
-                        strncpy_P(ssid, (char*) pgm_read_dword(&(WIFI_SSIDS[wifi_found[wifi_selected]])),WL_SSID_MAX_LENGTH + 1);
-                        strncpy_P(password, (char*) pgm_read_dword(&(WIFI_PASSWORDS[wifi_found[wifi_selected]])),WL_PASSWORD_MAX_LENGTH + 1);
-                        WiFi.begin(ssid,password);
-                        wifi_selected++;
-                        ms = millis();
-                    }
-                    else
-                        scanner = NOT_SCANNING;
-                }*/
-                break;
-            }
-
-        }
-        connected = 0;
-        sntp_stop();
-    }
-}
-
-uint8_t wifi_init(timer_id_t timer_id)
-{
-    return timer_set_rel(timer_id,5000 * 1000,&wifi_check);
-}
+uint8_t scan = WIFI_SCAN_NOT_SCANNING;
 
 void wifi_scan_result(int foundCount)
 {
@@ -119,4 +47,77 @@ void wifi_scan_result(int foundCount)
     }
     else
         scanner = NOT_SCANNING;
+}
+
+uint8_t wifi_check(timer_id_t id,timer_trigger_t trigger)
+{
+    if(WiFi.isConnected())
+    {
+        if(!connected)
+        {
+            connected = 1;
+            Serial.printf("Connected to %s\n",WiFi.SSID().c_str());
+            configTime(TZ,NTP_SERVER_1,NTP_SERVER_2,NTP_SERVER_3);
+            timer_set_rel(id,1000 * 1000,&wifi_check);
+        }
+        else
+        {
+
+            /*if(millis() - ms > 1000)
+            {
+                time_t data;
+                time(&data);
+                struct tm * info = localtime(&data);
+                char tmp[100];
+                strftime(tmp,100,"%A, %d %B %G, %H:%M:%S\n",info);
+                Serial.print(tmp);
+                ms = millis();
+            }*/
+        }
+    }
+    else
+    {
+        switch(scan)
+        {
+            case WIFI_SCAN_NOT_SCANNING:
+            {
+                WiFi.disconnect(false);
+                WiFi.scanNetworksAsync(&wifi_scan_result,true);
+                scan = WIFI_SCAN_SCANNING;
+                wifi_selected = 0;
+                break;
+            }
+            case WIFI_SCAN_SCANNING:
+            {
+                break;
+            }
+            case WIFI_SCAN_ENDED:
+            {
+                /*if(millis() - ms > WL_RETRY_INTERVAL)
+                {
+                    if(wifi_selected < wifi_count)
+                    {
+                        char ssid[WL_SSID_MAX_LENGTH + 1];
+                        char password[WL_PASSWORD_MAX_LENGTH + 1];
+                        strncpy_P(ssid, (char*) pgm_read_dword(&(WIFI_SSIDS[wifi_found[wifi_selected]])),WL_SSID_MAX_LENGTH + 1);
+                        strncpy_P(password, (char*) pgm_read_dword(&(WIFI_PASSWORDS[wifi_found[wifi_selected]])),WL_PASSWORD_MAX_LENGTH + 1);
+                        WiFi.begin(ssid,password);
+                        wifi_selected++;
+                        ms = millis();
+                    }
+                    else
+                        scanner = NOT_SCANNING;
+                }*/
+                break;
+            }
+
+        }
+        connected = 0;
+        sntp_stop();
+    }
+}
+
+uint8_t wifi_init(timer_id_t timer_id)
+{
+    return timer_set_rel(timer_id,5000 * 1000,&wifi_check);
 }

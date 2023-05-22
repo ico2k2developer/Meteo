@@ -77,7 +77,7 @@ void setup()
     timer_init(8);
 
     WiFi.mode(WIFI_STA);
-    WiFi.begin(DEFAULT_SSID,DEFAULT_PASSWORD);
+    //WiFi.begin(DEFAULT_SSID,DEFAULT_PASSWORD);
 
     Serial.println("Setup completed\n");
 }

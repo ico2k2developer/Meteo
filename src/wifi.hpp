@@ -28,6 +28,10 @@ const char* const WIFI_PASSWORDS[] PROGMEM =    {MEM_DEFAULT_PASSWORD,MEM_WIFI01
 
 #define MEM_WIFI_COUNT  3
 
+#define WIFI_SCAN_NOT_SCANNING      0x0
+#define WIFI_SCAN_SCANNING          0x1
+#define WIFI_SCAN_ENDED             0x2
+
 uint8_t wifi_init(timer_id_t timer_id);
 
 #endif //METEO_WIFI_HPP

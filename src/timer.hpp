@@ -11,7 +11,7 @@
 
 typedef uint8_t timer_id_t;
 typedef uint64_t timer_trigger_t;
-typedef std::function<uint8_t(uint64_t)> timer_action_t;
+typedef std::function<uint8_t(timer_id_t,timer_trigger_t)> timer_action_t;
 
 typedef struct
 {
