@@ -2,10 +2,10 @@
 // Created by ico2k2 on 29/9/2022.
 //
 
-#ifndef METEO_DATA_H
-#define METEO_DATA_H
+#ifndef METEO_DATA_HPP
+#define METEO_DATA_HPP
 
-#include <eeprom.h>
+#include <eeprom.hpp>
 
 typedef struct
 {
@@ -103,4 +103,4 @@ data_p loadData(data_p target,uint16_t day)
 
 
 
-#endif //METEO_DATA_H
+#endif //METEO_DATA_HPP

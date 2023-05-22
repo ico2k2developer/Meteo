@@ -1,16 +1,14 @@
-#include <main.h>
+#include <main.hpp>
 
 Adafruit_BME280 bme;
 uRTCLib rtc;
-WiFiClient client;
-Adafruit_MQTT_Client mqtt(&client,AIO_SERVER,AIO_PORT,PROJECT,AIO_USERNAME,AIO_KEY);
+/*WiFiClient client;
+Adafruit_MQTT_Client mqtt(&client,AIO_ADDR,AIO_PORT,PROJECT,AIO_USERNAME,AIO_KEY);
 Adafruit_MQTT_Publish rssi(&mqtt,FEED_RSSI );
 Adafruit_MQTT_Publish temperature(&mqtt, FEED_TEMPERATURE);
 Adafruit_MQTT_Publish pressure(&mqtt, FEED_PRESSURE);
 Adafruit_MQTT_Publish humidity(&mqtt, FEED_HUMIDITY);
 Adafruit_MQTT_Publish logs(&mqtt, FEED_LOGS);
-WiFiUDP ntpUDP;
-NTPClient ntp(ntpUDP,NTP_SERVER,NTP_OFFSET,NTP_UPDATE_INTERVAL);
 
 sample_t temp_max,temp_min,press_max,press_min,hum_max,hum_min;
 uint64_t serial;
@@ -21,21 +19,35 @@ bool_t minMaxUpdates;
 #define UPDATE_PRESS_MAX    2
 #define UPDATE_PRESS_MIN    3
 #define UPDATE_HUM_MAX      4
-#define UPDATE_HUM_MIN      5
+#define UPDATE_HUM_MIN      5*/
 
 void setup()
 {
     Serial.begin(115200);
-    Serial.println("\n\nSerial port initialized");
+    Serial.println("\n\nSerial port initialized.");
+    Serial.printf("Restart reason: %s\n",EspClass::getResetReason().c_str());
 
-    if(I2C_ClearBus() != 0)
+
+    if(i2c_bus_clear())
+    {
+        Serial.println("Restarting because IC2 bus is not available...");
         EspClass::restart();
+    }
     Wire.begin(0,2);
+
+    if(bme.begin())
+        Serial.println("BME280 sensor correctly configured");
+    else
+    {
+        Serial.println("Restarting because BME280 is not available...");
+        delay(5000);
+        EspClass::restart();
+    }
 
     Serial.println("Initiaziling setup");
     rtc.set_model(URTCLIB_MODEL_DS3231);
     rtc.refresh();
-    Serial.printf("Current time is %02i:%02i:%02i %i/%i/%i\n",
+    Serial.printf("RTC time is %02i:%02i:%02i %i/%i/%i\n",
                   rtc.hour(),
                   rtc.minute(),
                   rtc.second(),
@@ -44,16 +56,7 @@ void setup()
                   rtc.year());
     //client.setFingerprint(AIO_FINGERPRINT);
 
-    if(bme.begin())
-        Serial.println("BME280 sensor correctly configured");
-    else
-    {
-        Serial.println("BME280 not found, restarting...");
-        delay(5000);
-        EspClass::restart();
-    }
-
-    rtc.refresh();
+    /*rtc.refresh();
 
     sample_set_value(&temp_max,bme.readTemperature());
     sample_set_time(&temp_max,rtc.hour(),rtc.minute());
@@ -69,19 +72,86 @@ void setup()
 
     minMaxUpdates = 0;
 
+    serial = millis();*/
+
+    timer_init(8);
+
     WiFi.mode(WIFI_STA);
+    WiFi.begin(DEFAULT_SSID,DEFAULT_PASSWORD);
 
-    serial = millis();
-
-    Serial.println("Setup completed");
-    delay(1000);
+    Serial.println("Setup completed\n");
 }
 
-unsigned char connected = 1;
-unsigned int update = 0;
-int8_t mqttError;
+
+typedef enum
+{
+    NOT_SCANNING,
+    SCANNING,
+    SCAN_ENDED,
+}scan_t;
+
+unsigned char firstConnection = 1;
+unsigned char connected = 0;
+scan_t scanner = NOT_SCANNING;
+unsigned long ms;
+uint8_t wifi_selected,wifi_count;
+uint8_t wifi_found[MEM_WIFI_COUNT];
+/*unsigned int update = 0;
+int8_t mqttError;*/
 
 void loop()
+{
+    micros64();
+
+
+
+    /*switch(WiFi.status())
+    {
+        case WL_CONNECTED:
+        {
+            if(!connected)
+            {
+                connected = 1;
+                network = 0;
+                Serial.printf("Connected to %s\n",WiFi.SSID().c_str());
+                if(firstConnection)
+                {
+                    firstConnection = 0;
+                    configTime(NTP_TIMEZONE * 3600,DST_OFFSET * 3600,NTP_SERVER_1,NTP_SERVER_2,NTP_SERVER_3);
+                }
+                else
+                    sntp_init();
+                time_t data;
+                time(&data);
+                struct tm * info = localtime(&data);
+                char tmp[100];
+                strftime(tmp,100,"%A, %d %B &G, %H:%M:%S\n",info);
+                Serial.print(tmp);
+            }
+            break;
+        }
+        case WL_NO_SSID_AVAIL:
+        case WL_CONNECT_FAILED:
+        case WL_WRONG_PASSWORD:
+        {
+            Serial.printf("Could not connect to " WIFI_SSID_FORMAT "\n",network);
+            network++;
+        }
+        default:
+        {
+            connected = 0;
+            if(!firstConnection)
+                sntp_stop();
+            char ssid[WL_SSID_MAX_LENGTH];
+            snprintf(ssid,WL_SSID_MAX_LENGTH,WIFI_SSID_FORMAT,network);
+            WiFi.begin("WIFI-00",WIFI_PASSWORD);
+            Serial.printf("Trying to connect to %s\n","WIFI-00");
+        }
+    }*/
+}
+
+
+/*void loop()
 {
     if(WiFi.isConnected())
     {
@@ -239,4 +309,4 @@ void loop()
         bool_setValue(&minMaxUpdates,UPDATE_HUM_MIN,1);
     }
 
-}
+}*/

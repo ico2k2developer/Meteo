@@ -1,4 +1,4 @@
-#include "boolean.h"
+#include "boolean.hpp"
 
 uint8_t bool_getValue(bool_t boolean, uint8_t index)
 {

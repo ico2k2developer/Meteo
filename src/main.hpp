@@ -2,26 +2,20 @@
 // Created by ico2k2 on 19/07/2022.
 //
 
-#ifndef METEO_MAIN_H
-#define METEO_MAIN_H
-
-#define PROJECT         "Meteo"
+#ifndef METEO_MAIN_HPP
+#define METEO_MAIN_HPP
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <ESP8266HTTPClient.h>
 #include <Adafruit_BME280.h>
-#include <Adafruit_MQTT.h>
-#include <Adafruit_MQTT_Client.h>
 
-#include <boolean.h>
-#include <version.h>
-#include <passwords.h>
-#include <adafruit.h>
-#include <types.h>
-#include <config.h>
-#include <eeprom.h>
+#include <config.hpp>
+#include <homeassistant.hpp>
+#include <version.hpp>
+
+PROGMEM
 
 #define LED_ON              LOW
 #define LED_OFF             HIGH
@@ -31,4 +25,6 @@
 #define out(x,y)            digitalWrite(x,y)
 #define ledBuiltin(x)       out(LED_BUILTIN,x)
 
-#endif //METEO_MAIN_H
+void wifiScanResult(int foundCount);
+
+#endif //METEO_MAIN_HPP

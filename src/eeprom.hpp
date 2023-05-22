@@ -2,8 +2,8 @@
 // Created by ico2k2 on 23/9/2022.
 //
 
-#ifndef METEO_EEPROM_H
-#define METEO_EEPROM_H
+#ifndef METEO_EEPROM_HPP
+#define METEO_EEPROM_HPP
 
 #include <cstdint>
 #include <cstdlib>
@@ -22,4 +22,4 @@
 void*       eeprom_read(uint16_t mem_address, void* buffer, uint16_t size);
 void        eeprom_write(uint16_t mem_address, void* buffer, uint16_t size);
 
-#endif //METEO_EEPROM_H
+#endif //METEO_EEPROM_HPP

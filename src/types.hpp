@@ -2,8 +2,8 @@
 // Created by ico2k2 on 19/07/2022.
 //
 
-#ifndef METEO_TYPES_H
-#define METEO_TYPES_H
+#ifndef METEO_TYPES_HPP
+#define METEO_TYPES_HPP
 
 #include <cstdint>
 
@@ -40,4 +40,4 @@ sample_p    sample_set_value(sample_p sample,float value);
 sample_p    sample_copy(sample_p target,sample_t source);
 
 
-#endif //METEO_TYPES_H
+#endif //METEO_TYPES_HPP

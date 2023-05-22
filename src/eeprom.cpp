@@ -2,7 +2,7 @@
 // Created by ico2k2 on 23/9/2022.
 //
 
-#include "eeprom.h"
+#include "eeprom.hpp"
 
 void* eeprom_read(uint16_t mem_address, void* buffer, uint16_t size)
 {
