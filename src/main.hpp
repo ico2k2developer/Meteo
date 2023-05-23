@@ -25,6 +25,12 @@ PROGMEM
 #define out(x,y)            digitalWrite(x,y)
 #define ledBuiltin(x)       out(LED_BUILTIN,x)
 
+
+#define TIMER_COUNT     2
+
+#define TIMER_WIFI          0x1
+#define TIMER_CONNECTION    0x2
+
 void wifiScanResult(int foundCount);
 
 #endif //METEO_MAIN_HPP

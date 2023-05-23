@@ -11,7 +11,10 @@
 #include <passwords.hpp>
 #include <timer.hpp>
 
-#define WIFI_INTERVAL_RETRY     5000
+#define WIFI_INTERVAL_CONNECTED     1000
+#define WIFI_INTERVAL_CONNECTING    250
+#define WIFI_INTERVAL_SCANNING      750
+#define WIFI_INTERVAL_NOT_CONNECTED 7500
 
 #define WIFI_SIZE_PASSWORD      64
 
@@ -28,10 +31,15 @@ const char* const WIFI_PASSWORDS[] PROGMEM =    {MEM_DEFAULT_PASSWORD,MEM_WIFI01
 
 #define MEM_WIFI_COUNT  3
 
-#define WIFI_SCAN_NOT_SCANNING      0x0
-#define WIFI_SCAN_SCANNING          0x1
-#define WIFI_SCAN_ENDED             0x2
+#define WIFI_NOT_CONNECTED  0x0
+#define WIFI_SCANNING       0x1
+#define WIFI_SCAN_ENDED     0x2
+#define WIFI_CONNECTED      0x3
+#define WIFI_CONNECTING     0x4
 
-uint8_t wifi_init(timer_id_t timer_id);
+uint8_t wifi_init(timer_id_t timer_id,
+                  std::function<void(timer_trigger_t)> connected,
+                  std::function<void(timer_trigger_t)> disconnected);
+uint8_t wifi_status();
 
 #endif //METEO_WIFI_HPP

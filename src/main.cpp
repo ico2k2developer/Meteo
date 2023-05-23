@@ -21,6 +21,10 @@ bool_t minMaxUpdates;
 #define UPDATE_HUM_MAX      4
 #define UPDATE_HUM_MIN      5*/
 
+void connected(timer_trigger_t trigger);
+uint8_t while_connected(timer_id_t id,timer_trigger_t trigger);
+void disconnected(timer_trigger_t trigger);
+
 void setup()
 {
     Serial.begin(115200);
@@ -74,80 +78,30 @@ void setup()
 
     serial = millis();*/
 
-    timer_init(8);
-
-    WiFi.mode(WIFI_STA);
-    //WiFi.begin(DEFAULT_SSID,DEFAULT_PASSWORD);
-
+    timer_init(TIMER_COUNT);
+    wifi_init(TIMER_WIFI,&connected,&disconnected);
     Serial.println("Setup completed\n");
 }
 
-
-typedef enum
-{
-    NOT_SCANNING,
-    SCANNING,
-    SCAN_ENDED,
-}scan_t;
-
-unsigned char firstConnection = 1;
-unsigned char connected = 0;
-scan_t scanner = NOT_SCANNING;
-unsigned long ms;
-uint8_t wifi_selected,wifi_count;
-uint8_t wifi_found[MEM_WIFI_COUNT];
-/*unsigned int update = 0;
-int8_t mqttError;*/
-
 void loop()
 {
-    micros64();
+    timer_tick();
+}
 
+void connected(timer_trigger_t trigger)
+{
+    timer_set_rel(TIMER_CONNECTION,500 * 1000,&while_connected);
+}
 
+void disconnected(timer_trigger_t trigger)
+{
+    timer_remove(TIMER_CONNECTION);
 
-    /*switch(WiFi.status())
-    {
-        case WL_CONNECTED:
-        {
-            if(!connected)
-            {
-                connected = 1;
-                network = 0;
-                Serial.printf("Connected to %s\n",WiFi.SSID().c_str());
-                if(firstConnection)
-                {
-                    firstConnection = 0;
-                    configTime(NTP_TIMEZONE * 3600,DST_OFFSET * 3600,NTP_SERVER_1,NTP_SERVER_2,NTP_SERVER_3);
-                }
-                else
-                    sntp_init();
-                time_t data;
-                time(&data);
-                struct tm * info = localtime(&data);
-                char tmp[100];
-                strftime(tmp,100,"%A, %d %B &G, %H:%M:%S\n",info);
-                Serial.print(tmp);
-            }
-            break;
-        }
-        case WL_NO_SSID_AVAIL:
-        case WL_CONNECT_FAILED:
-        case WL_WRONG_PASSWORD:
-        {
-            Serial.printf("Could not connect to " WIFI_SSID_FORMAT "\n",network);
-            network++;
-        }
-        default:
-        {
-            connected = 0;
-            if(!firstConnection)
-                sntp_stop();
-            char ssid[WL_SSID_MAX_LENGTH];
-            snprintf(ssid,WL_SSID_MAX_LENGTH,WIFI_SSID_FORMAT,network);
-            WiFi.begin("WIFI-00",WIFI_PASSWORD);
-            Serial.printf("Trying to connect to %s\n","WIFI-00");
-        }
-    }*/
+}
+
+uint8_t while_connected(timer_id_t id,timer_trigger_t trigger)
+{
+    bme.
 }
 
 
