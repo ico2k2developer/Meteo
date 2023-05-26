@@ -37,9 +37,10 @@ const char* const WIFI_PASSWORDS[] PROGMEM =    {MEM_DEFAULT_PASSWORD,MEM_WIFI01
 #define WIFI_CONNECTED      0x3
 #define WIFI_CONNECTING     0x4
 
-uint8_t wifi_init(timer_id_t timer_id,
-                  std::function<void(timer_trigger_t)> connected,
-                  std::function<void(timer_trigger_t)> disconnected);
+typedef void (*wifi_connected_t)(timer_trigger_t trigger);
+typedef void (*wifi_disconnected_t)(timer_trigger_t trigger);
+
+uint8_t wifi_init(timer_id_t timer_id,wifi_connected_t connected,wifi_disconnected_t disconnected);
 uint8_t wifi_status();
 
 #endif //METEO_WIFI_HPP

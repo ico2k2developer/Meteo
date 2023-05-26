@@ -17,4 +17,6 @@
 #define HOMEASSISTANT_TOPIC_PRESS   HOMEASSISTANT_TOPIC "/pressure"
 #define HOMEASSISTANT_TOPIC_HUM     HOMEASSISTANT_TOPIC "/humidity"
 
+uint8_t homeassistant_update(float temp,float press,float hum);
+
 #endif //METEO_HOMEASSISTANT_HPP

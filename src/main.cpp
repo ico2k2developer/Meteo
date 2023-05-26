@@ -27,7 +27,11 @@ void disconnected(timer_trigger_t trigger);
 
 void setup()
 {
+    WiFi.mode(WIFI_STA);
+    WiFi.setAutoReconnect(false);
+    WiFi.begin(DEFAULT_SSID,DEFAULT_PASSWORD);
     Serial.begin(115200);
+    Serial.setDebugOutput(true);
     Serial.println("\n\nSerial port initialized.");
     Serial.printf("Restart reason: %s\n",EspClass::getResetReason().c_str());
 
@@ -78,7 +82,9 @@ void setup()
 
     serial = millis();*/
 
+    Serial.println("Creating timers...");
     timer_init(TIMER_COUNT);
+    Serial.println("Creating wifi timer...");
     wifi_init(TIMER_WIFI,&connected,&disconnected);
     Serial.println("Setup completed\n");
 }
@@ -86,22 +92,27 @@ void setup()
 void loop()
 {
     timer_tick();
+    delay(250);
 }
 
 void connected(timer_trigger_t trigger)
 {
-    timer_set_rel(TIMER_CONNECTION,500 * 1000,&while_connected);
+    Serial.println("WiFi connection established.");
+    while_connected(TIMER_CONNECTION,0);
 }
 
 void disconnected(timer_trigger_t trigger)
 {
+    Serial.println("WiFi connection ended.");
     timer_remove(TIMER_CONNECTION);
-
 }
 
 uint8_t while_connected(timer_id_t id,timer_trigger_t trigger)
 {
-    bme.
+    timer_set_rel(TIMER_CONNECTION,500 * 1000,&while_connected);
+    if(homeassistant_update(bme.readTemperature(),bme.readPressure(),bme.readHumidity()))
+        Serial.println("MQTT post failed.");
+    return 1;
 }
 
 

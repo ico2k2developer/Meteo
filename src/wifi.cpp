@@ -8,10 +8,13 @@
 timer_id_t id = 0;
 uint8_t status = WIFI_NOT_CONNECTED;
 uint16_t found = 0;
-std::function<void(timer_trigger_t)> callback_con,callback_disc;
+wifi_connected_t callback_con;
+wifi_disconnected_t callback_disc;
+uint16_t pos = 0;
 
 uint8_t wifi_status()
 {
+    id = 0;
     return status;
 }
 
@@ -64,6 +67,8 @@ void wifi_scan_result(int foundCount)
 
 uint8_t wifi_check(timer_id_t id,timer_trigger_t trigger)
 {
+    timer_set_rel(id,WIFI_INTERVAL_SCANNING * 1000,&wifi_check);
+    Serial.printf("WiFi status: %d, ESP WiFi status: %d\n",status,WiFi.status());
     switch(status)
     {
         case WIFI_CONNECTED:
@@ -119,36 +124,43 @@ uint8_t wifi_check(timer_id_t id,timer_trigger_t trigger)
             if(found)
             {
                 uint16_t i1,i2;
-                char name[WL_SSID_MAX_LENGTH];
-                char buffer[MEM_WIFI_COUNT][WL_SSID_MAX_LENGTH];
+                char name[WL_SSID_MAX_LENGTH + 1];
+                char buffer[MEM_WIFI_COUNT][WL_SSID_MAX_LENGTH + 1];
                 //memset(wifi_found,0,sizeof(uint8_t) * MEM_WIFI_COUNT);
                 //wifi_count = 0;
                 for(i1 = 0; i1 < MEM_WIFI_COUNT; i1++)
-                    strncpy_P(buffer[i1],(char*)pgm_read_dword(&(WIFI_SSIDS[i1])),WL_SSID_MAX_LENGTH);
+                    strncpy_P(buffer[i1],(char*)pgm_read_dword(&(WIFI_SSIDS[i1])),WL_SSID_MAX_LENGTH + 1);
                 for(i1 = 0; i1 < found; i1++)
                 {
-                    strncpy(name,WiFi.SSID(i1).c_str(),WL_SSID_MAX_LENGTH);
-                    for(i2 = 0; i2 < MEM_WIFI_COUNT; i2++)
+                    strncpy(name,WiFi.SSID(i1).c_str(),WL_SSID_MAX_LENGTH + 1);
+                    for(i2 = pos; i2 < MEM_WIFI_COUNT; i2++)
                     {
                         if(buffer[i2] != nullptr)
                         {
+                            Serial.printf("Comparing \"%s\" & \"%s\": ",name,buffer[i2]);
                             if(strcmp(name,buffer[i2]) == 0)
                             {
-                                char password[WIFI_SIZE_PASSWORD];
-                                strncpy_P(password,(char*)pgm_read_dword(&(WIFI_PASSWORDS[i1])),WIFI_SIZE_PASSWORD);
+                                Serial.println("found!");
+                                char password[WIFI_SIZE_PASSWORD + 1];
+                                strncpy_P(password,(char*)pgm_read_dword(&(WIFI_PASSWORDS[i2])),WIFI_SIZE_PASSWORD + 1);
+                                Serial.printf("\tname: %s, password: %s\n",name,password);
                                 WiFi.begin(name,password);
                                 status = WIFI_CONNECTING;
                                 timer_set_rel(id,WIFI_INTERVAL_CONNECTING * 1000,nullptr);
                                 /*buffer[i2] = nullptr;
                                 found1[f1] = i2;
                                 f1++;*/
+                                i1 = found;
                                 break;
                             }
+                            else
+                                Serial.println("not found.");
                         }
-                        if(i2 != MEM_WIFI_COUNT)
-                            break;
                     }
                 }
+                pos = i2 + 1;
+                if(pos >= MEM_WIFI_COUNT)
+                    pos = 0;
             }
             else
                 timer_set_rel(id,WIFI_INTERVAL_NOT_CONNECTED * 1000,nullptr);
@@ -173,17 +185,16 @@ uint8_t wifi_check(timer_id_t id,timer_trigger_t trigger)
     return 1;
 }
 
-uint8_t wifi_init(timer_id_t wifi_id,
-                  std::function<void(timer_trigger_t)> connected,
-                  std::function<void(timer_trigger_t)> disconnected)
+uint8_t wifi_init(timer_id_t timer_id,wifi_connected_t connected,wifi_disconnected_t disconnected)
 {
     uint8_t result = -1;
     if(WiFi.status() != WL_NO_SHIELD)
     {
         WiFi.mode(WIFI_STA);
-        result = (timer_set_rel(id = wifi_id,5000 * 1000,&wifi_check));
-        callback_con = std::move(connected);
-        callback_disc = std::move(disconnected);
+        result = (timer_set_rel(id = timer_id,5000 * 1000,&wifi_check));
+        Serial.printf("WiFi initialization: %d\n",result);
+        callback_con = connected;
+        callback_disc = disconnected;
         if(result)
             timer_tick();
     }
