@@ -21,19 +21,43 @@ bool_t minMaxUpdates;
 #define UPDATE_HUM_MAX      4
 #define UPDATE_HUM_MIN      5*/
 
-void connected(timer_trigger_t trigger);
+void connected();
+void disconnected();
 uint8_t while_connected(timer_id_t id,timer_trigger_t trigger);
-void disconnected(timer_trigger_t trigger);
+
+WiFiEventHandler authModeHandler,gotIPHandler,dhcpTimeoutHandler;
+WiFiEventHandler modeHandler;
 
 void setup()
 {
     Serial.begin(115200);
     Serial.println("\n\nSerial port initialized.");
-    WiFi.mode(WIFI_STA);
-    WiFi.setAutoReconnect(true);
-    WiFi.begin(DEFAULT_SSID,DEFAULT_PASSWORD);
-    //Serial.setDebugOutput(true);
     Serial.printf("Restart reason: %s\n",EspClass::getResetReason().c_str());
+    Serial.setDebugOutput(true);
+    modeHandler = WiFi.onWiFiModeChange([](const WiFiEventModeChange & event)
+        {
+            Serial.print("Changed mode from ");
+            Serial.print(event.oldMode);
+            Serial.print(" to ");
+            Serial.println(event.newMode);
+        });
+    authModeHandler = WiFi.onStationModeAuthModeChanged([](const WiFiEventStationModeAuthModeChanged & event)
+        {
+            Serial.printf("Auth mode changed from %hhu to %hhu\n",event.oldMode,event.newMode);
+        });
+    gotIPHandler = WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP & event)
+        {
+            Serial.print("Got IP ");
+            Serial.print(event.ip);
+            Serial.print(", mask ");
+            Serial.print(event.mask);
+            Serial.print(", gateway ");
+            Serial.println(event.gw);
+        });
+    dhcpTimeoutHandler = WiFi.onStationModeDHCPTimeout([]()
+        {
+            Serial.println("DHCP timeout");
+        });
 
 
     if(i2c_bus_clear())
@@ -84,15 +108,9 @@ void setup()
 
     Serial.println("\nCreating timers...");
     timer_init(TIMER_COUNT);
-    //Serial.println("Creating wifi timer...");
-    //wifi_init(TIMER_WIFI,&connected,&disconnected);
+    Serial.println("Creating wifi timer...");
+    wifi_init(TIMER_WIFI,&connected,&disconnected);
     Serial.println("Setup completed\n");
-    while(!WiFi.isConnected())
-    {
-        Serial.print('.');
-        delay(750);
-    }
-    connected(0);
 }
 
 void loop()
@@ -100,13 +118,13 @@ void loop()
     timer_tick();
 }
 
-void connected(timer_trigger_t trigger)
+void connected()
 {
     Serial.println("WiFi connection established.");
     while_connected(TIMER_CONNECTION,0);
 }
 
-void disconnected(timer_trigger_t trigger)
+void disconnected()
 {
     Serial.println("WiFi connection ended.");
     timer_remove(TIMER_CONNECTION);
@@ -123,7 +141,7 @@ uint8_t while_connected(timer_id_t id,timer_trigger_t trigger)
         Serial.printf("MQTT post failed: %d.\n",result);
     else
         Serial.println("MQTT post succeded.");
-    return 1;
+    return TIMER_RESULT_CONTINUE;
 }
 
 

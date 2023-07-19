@@ -76,11 +76,12 @@ uint8_t timer_remove(timer_id_t id)
 void timer_triggered(timer_id_t index,timer_trigger_t trigger)
 {
     if(timers[index].action)
-        if(!(timers[index].action(index,trigger)))
+    {
+        if(timers[index].action(index,trigger) == TIMER_RESULT_DELETE)
         {
-            //Serial.printf("Deleting trigger %d as requested.\n",timers[index].id);
             timers[index].id = TIMER_ID_NULL;
         }
+    }
 }
 
 uint8_t timer_trigger(timer_id_t id)

@@ -10,6 +10,9 @@
 
 #define TIMER_ID_NULL   0
 
+#define TIMER_RESULT_DELETE     0x0
+#define TIMER_RESULT_CONTINUE   0x1
+
 typedef uint8_t timer_id_t;
 typedef uint64_t timer_trigger_t;
 typedef uint8_t (*timer_action_t)(timer_id_t id,timer_trigger_t trigger);
