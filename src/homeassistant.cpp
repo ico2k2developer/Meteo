@@ -13,13 +13,13 @@ uint8_t homeassistant_update(float temp,float press,float hum)
     if(mqtt.connected())
     {
         char tmp[10];
-        snprintf(tmp,sizeof(tmp) / sizeof(tmp[0]),"%f",temp);
+        snprintf(tmp,sizeof(tmp) / sizeof(tmp[0]),"%.2f",temp);
         if(!mqtt.publish(HOMEASSISTANT_TOPIC_TEMP,tmp,HOMEASSISTANT_QOS,HOMEASSISTANT_RET))
             return -2;
-        snprintf(tmp,sizeof(tmp) / sizeof(tmp[0]),"%f",press);
+        snprintf(tmp,sizeof(tmp) / sizeof(tmp[0]),"%.2f",press);
         if(!mqtt.publish(HOMEASSISTANT_TOPIC_PRESS,tmp,HOMEASSISTANT_QOS,HOMEASSISTANT_RET))
             return -2;
-        snprintf(tmp,sizeof(tmp) / sizeof(tmp[0]),"%f",hum);
+        snprintf(tmp,sizeof(tmp) / sizeof(tmp[0]),"%.2f",hum);
         if(!mqtt.publish(HOMEASSISTANT_TOPIC_HUM,tmp,HOMEASSISTANT_QOS,HOMEASSISTANT_RET))
             return -2;
         return 0;

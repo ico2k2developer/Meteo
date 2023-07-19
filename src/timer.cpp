@@ -9,9 +9,7 @@ uint8_t timers_count,timers_size;
 
 uint8_t timer_init(uint8_t count)
 {
-    Serial.printf("Allocating %hhu timers...\n",count);
     timers = (timer_p)malloc(count * sizeof(timer2_t));
-    Serial.printf("Allocated %hhu timers (%zu bytes)\n",count,count * sizeof(timer2_t));
     if(timers)
     {
         timer_id_t i;
@@ -19,11 +17,8 @@ uint8_t timer_init(uint8_t count)
         timers_size = count;
         for(i = 0; i < count; i++)
         {
-            Serial.printf("Initializing element %hhu...\n",i);
             timers[i].id = TIMER_ID_NULL;
-            Serial.printf("Assigned id %d\n",timers[i].id);
             timers[i].action = nullptr;
-            Serial.println("Assigned callback");
         }
         return 0;
     }
@@ -32,7 +27,8 @@ uint8_t timer_init(uint8_t count)
 
 uint8_t timer_set_abs(timer_id_t id,timer_trigger_t absolute,timer_action_t action)
 {
-    Serial.printf("Timer set request, current count %d, id %d, time %llu:\n\t",timers_count,id,absolute);
+    /*Serial.printf("Timer set request, current count %d, id %d, "
+                  "target time %llu, current time %llu\n",timers_count,id,absolute,micros64());*/
     if(!timers)
         return -1;
     timer_id_t i;
@@ -41,14 +37,11 @@ uint8_t timer_set_abs(timer_id_t id,timer_trigger_t absolute,timer_action_t acti
         if(timers[i].id == TIMER_ID_NULL || timers[i].id == id)
             break;
     }
-    Serial.printf("proposed position is %d, ",i);
     if(i < timers_size)
     {
-        Serial.print("accepted.");
         if(i == timers_count)
         {
             timers_count++;
-            Serial.printf(" Count set to %d.",timers_count);
         }
         timers[i].id = id;
         timers[i].trigger = absolute;
@@ -56,16 +49,12 @@ uint8_t timer_set_abs(timer_id_t id,timer_trigger_t absolute,timer_action_t acti
             timers[i].action = action;
         return timers_count;
     }
-    Serial.println();
     return -2;
 }
 
 uint8_t timer_set_rel(timer_id_t id,timer_trigger_t relative,timer_action_t action)
 {
-    if(micros64() < relative)
-        return timer_set_abs(id,relative - micros64(),action);
-    else
-        return -3;
+    return timer_set_abs(id,relative + micros64(),action);
 }
 
 uint8_t timer_remove(timer_id_t id)
@@ -87,8 +76,11 @@ uint8_t timer_remove(timer_id_t id)
 void timer_triggered(timer_id_t index,timer_trigger_t trigger)
 {
     if(timers[index].action)
-        if(!(timers[index].action)(index,trigger))
+        if(!(timers[index].action(index,trigger)))
+        {
+            //Serial.printf("Deleting trigger %d as requested.\n",timers[index].id);
             timers[index].id = TIMER_ID_NULL;
+        }
 }
 
 uint8_t timer_trigger(timer_id_t id)
@@ -130,6 +122,5 @@ uint8_t timer_tick()
             }
         }
     }
-    Serial.println();
     return result;
 }

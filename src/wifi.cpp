@@ -65,7 +65,7 @@ void wifi_scan_result(int foundCount)
         scanner = NOT_SCANNING;*/
 }
 
-uint8_t wifi_check(timer_id_t id,timer_trigger_t trigger)
+uint8_t wifi_check(timer_id_t timer_id,timer_trigger_t trigger)
 {
     timer_set_rel(id,WIFI_INTERVAL_SCANNING * 1000,&wifi_check);
     Serial.printf("WiFi status: %d, ESP WiFi status: %d\n",status,WiFi.status());
@@ -112,7 +112,7 @@ uint8_t wifi_check(timer_id_t id,timer_trigger_t trigger)
         }
         case WIFI_NOT_CONNECTED:
         {
-            WiFi.disconnect(false);
+            WiFi.mode(WIFI_STA);
             WiFi.scanNetworksAsync(&wifi_scan_result,true);
             status = WIFI_SCANNING;
             timer_set_rel(id,WIFI_INTERVAL_SCANNING * 1000,nullptr);
@@ -123,7 +123,7 @@ uint8_t wifi_check(timer_id_t id,timer_trigger_t trigger)
             status = WIFI_NOT_CONNECTED;
             if(found)
             {
-                uint16_t i1,i2;
+                uint16_t i1,i2 = 0;
                 char name[WL_SSID_MAX_LENGTH + 1];
                 char buffer[MEM_WIFI_COUNT][WL_SSID_MAX_LENGTH + 1];
                 //memset(wifi_found,0,sizeof(uint8_t) * MEM_WIFI_COUNT);
@@ -144,6 +144,7 @@ uint8_t wifi_check(timer_id_t id,timer_trigger_t trigger)
                                 char password[WIFI_SIZE_PASSWORD + 1];
                                 strncpy_P(password,(char*)pgm_read_dword(&(WIFI_PASSWORDS[i2])),WIFI_SIZE_PASSWORD + 1);
                                 Serial.printf("\tname: %s, password: %s\n",name,password);
+                                WiFi.mode(WIFI_STA);
                                 WiFi.begin(name,password);
                                 status = WIFI_CONNECTING;
                                 timer_set_rel(id,WIFI_INTERVAL_CONNECTING * 1000,nullptr);
@@ -158,9 +159,12 @@ uint8_t wifi_check(timer_id_t id,timer_trigger_t trigger)
                         }
                     }
                 }
-                pos = i2 + 1;
-                if(pos >= MEM_WIFI_COUNT)
-                    pos = 0;
+                if(i2)
+                {
+                    pos = i2 + 1;
+                    if(pos >= MEM_WIFI_COUNT)
+                        pos = 0;
+                }
             }
             else
                 timer_set_rel(id,WIFI_INTERVAL_NOT_CONNECTED * 1000,nullptr);
@@ -187,16 +191,19 @@ uint8_t wifi_check(timer_id_t id,timer_trigger_t trigger)
 
 uint8_t wifi_init(timer_id_t timer_id,wifi_connected_t connected,wifi_disconnected_t disconnected)
 {
+    Serial.printf("WiFi status: %d\n",WiFi.status());
     uint8_t result = -1;
     if(WiFi.status() != WL_NO_SHIELD)
     {
-        WiFi.mode(WIFI_STA);
+        Serial.printf("WiFi status: %d\n",WiFi.status());
+        //WiFi.mode(WIFI_STA);
         result = (timer_set_rel(id = timer_id,5000 * 1000,&wifi_check));
+        Serial.printf("WiFi status: %d\n",WiFi.status());
         Serial.printf("WiFi initialization: %d\n",result);
         callback_con = connected;
         callback_disc = disconnected;
-        if(result)
-            timer_tick();
+        /*if(!result)
+            timer_tick();*/
     }
     return result;
 }
